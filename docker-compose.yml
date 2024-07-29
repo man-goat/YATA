@@ -1,0 +1,10 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - yata-net
+
+networks:
+  yata-net:
