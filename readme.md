@@ -2,7 +2,7 @@
 
 aren't we tired of them by now?
 
-bypass the need to email myself youtube links to watch on my work computer.
+bypass the need to email myself youtube links or articles
 
 ## features
 
