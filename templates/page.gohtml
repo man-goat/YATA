@@ -1,3 +1,4 @@
+{{define "page"}}
 <!DOCTYPE html>
 <html>
 
@@ -12,24 +13,21 @@
 
 <body>
     <h1 id="header" class="title">YATA: Yet Another Todo-ish Application</h1>
-    <form id="form" hx-post="/add" hx-swap="none" hx-on::after-request="this.reset()">
-        <textarea id="textarea" rows="3" name="text" form="form" hx-post="/add" hx-swap="none"
+    <form id="form" hx-post="/posts" hx-swap="none" hx-on::after-request="this.reset()">
+        <textarea id="textarea" rows="3" name="text" form="form" hx-post="/posts" hx-swap="none"
             minlength="1" required
-            hx-on::after-request="this.reset()" hx-trigger="keydown[key==='Enter'&&!shiftKey]"></textarea>
-        <input id="submit" type="submit">
+            hx-trigger="keydown[key==='Enter'&&!shiftKey]"></textarea>
     </form>
     <h1 class="post-header">Posts</h1>
     <div id="post-area" hx-ext="ws" ws-connect="/socket">
         <ul id="posts">
             {{with $posts := .}}
             {{range $i, $v := $posts}}
-            <li class="post">
-                <pre>{{index $posts (revIndex $i (len $posts))}}</pre>
-            </li>
+            {{template "post" (index $posts (revIndex $i (len $posts)))}}
             {{end}}
             {{end}}
         </ul>
     </div>
 </body>
-
 </html>
+{{end}}

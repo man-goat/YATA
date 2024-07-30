@@ -5,11 +5,20 @@
     box-sizing: border-box;
 }
 
+::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 7px;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, .5);
+    box-shadow: 0 0 1px rgba(255, 255, 255, .5);
+}
+
 html, body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
-    background-color: #222;
-    color: #fff;
     margin: 0 10%;
     height: 100%;
     display: flex;
@@ -18,10 +27,7 @@ html, body {
 
 #textarea {
     width: 100%;
-    border: 1px solid #333;
     border-radius: 5px;
-    background-color: #333;
-    color: #fff;
 }
 
 #post-area {
@@ -37,10 +43,6 @@ html, body {
 
 /* Post Styles */
 #posts {
-    list-style: none;
-    padding: 0;
-    margin: 10px 0;
-    margin-top: 0;
     overflow-y: scroll;
 }
 
@@ -49,10 +51,27 @@ html, body {
 }
 
 .post {
-    background-color: #444;
-    border-radius: 5px;
+    margin: 5px;
+    padding: 10px;
+    background-color: #fafafa;
+}
+
+.post-content {
+    display: flex;
+    justify-content: space-between;
+    /* This will align the button to the right */
+}
+
+.post-text {
+    margin-right: 10px;
     padding: 5px;
-    margin: 10px 0px;
+    margin: 0;
+    /* Add some padding between the text and the button */
+}
+
+.post-delete {
+    margin: 10px;
+    height: 10px;
 }
 
 pre {

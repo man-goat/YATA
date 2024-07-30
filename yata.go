@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -30,22 +31,39 @@ func main() {
 	)
 
 	router.HandleFunc(
-		"/add",
+		"/posts",
 		func(w http.ResponseWriter, r *http.Request) {
-			p := post(r.FormValue("text"))
+			text := strings.TrimSpace(r.FormValue("text"))
+			if len(text) == 0 {
+				return
+			}
+			p := post(text)
 			SubscriptionHandler().Post(p)
 			posts = append(posts, p)
 		},
 	).Methods("POST")
 	router.HandleFunc("/", renderer)
 
+	router.HandleFunc(
+		"/posts",
+		func(w http.ResponseWriter, r *http.Request) {
+			// todo
+		},
+	).Methods("DELETE")
+
 	http.ListenAndServe(":80", router)
 }
 
 func writeMsg(ctx context.Context, msg post, c *websocket.Conn) error {
 	var rendered bytes.Buffer
-	mtmpl := template.Must(template.ParseFiles("templates/post.html"))
-	if err := mtmpl.Execute(&rendered, msg); err != nil {
+	funcMap := template.FuncMap{
+		"revIndex": func(index, length int) (revIndex int) { return (length - 1) - index },
+	}
+	tmpls, err := template.New("page.gohtml").Funcs(funcMap).ParseGlob("templates/*.gohtml")
+	if err != nil {
+		return err
+	}
+	if err := tmpls.ExecuteTemplate(&rendered, "response", msg); err != nil {
 		return err
 	}
 
@@ -90,18 +108,19 @@ func handleSocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func renderer(w http.ResponseWriter, r *http.Request) {
+
 	funcMap := template.FuncMap{
 		"revIndex": func(index, length int) (revIndex int) { return (length - 1) - index },
 	}
 
-	tmpl, err := template.New("page.html").Funcs(funcMap).ParseFiles("templates/page.html")
+	tmpls, err := template.New("page.gohtml").Funcs(funcMap).ParseGlob("templates/*.gohtml")
 	if err != nil {
 		log.Panic(err)
 	}
 
 	// better way to do this?
 	// https://gist.github.com/dmitshur/5f9e93c38f6b75421060
-	err = tmpl.Execute(w, posts)
+	err = tmpls.ExecuteTemplate(w, "page", posts)
 	if err != nil {
 		log.Panic(err)
 	}
