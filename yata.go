@@ -115,13 +115,15 @@ func renderer(w http.ResponseWriter, r *http.Request) {
 
 	tmpls, err := template.New("page.gohtml").Funcs(funcMap).ParseGlob("templates/*.gohtml")
 	if err != nil {
-		log.Panic(err)
+		log.Print(err)
+		return
 	}
 
 	// better way to do this?
 	// https://gist.github.com/dmitshur/5f9e93c38f6b75421060
 	err = tmpls.ExecuteTemplate(w, "page", posts)
 	if err != nil {
-		log.Panic(err)
+		log.Print(err)
+		return
 	}
 }

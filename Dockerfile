@@ -9,6 +9,8 @@ RUN CGO_ENABLED=0 GOARCH=arm64 go build -o /yata
 FROM scratch as final
 WORKDIR /
 COPY --from=builder /yata /yata
+COPY templates /templates
+COPY static /static
 
 EXPOSE 80
 ENTRYPOINT ["/yata"]
