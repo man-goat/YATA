@@ -2,7 +2,13 @@
 
 aren't we tired of them by now?
 
-bypass the need to email myself youtube links or articles
+## motivation:
+replace the workflow of emailing myself/discord messaging myself/text myself youtube links or articles
+
+eventually become Yet Another Todo-ish Application
+
+## how to use
+`docker compose -f docker-compose.yml up -d backend`
 
 ## features
 
