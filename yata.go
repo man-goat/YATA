@@ -5,42 +5,41 @@ import (
 	"context"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
-	"os"
 	"time"
 
+	"github.com/gorilla/mux"
 	"nhooyr.io/websocket"
 )
 
 type post string
 
+// what the fuck is a database
+// yolo lmao
+var posts []post
+
 func main() {
-	// what the fuck is a database
-	// yolo lmao
-	posts := make([]post, 0)
-	mux := http.NewServeMux()
+	router := mux.NewRouter()
 
-	mux.HandleFunc("/socket", handleSocket)
+	posts = make([]post, 0)
 
-	mux.HandleFunc("POST /add", func(w http.ResponseWriter, r *http.Request) {
-		p := post(r.FormValue("text"))
-		tmpl := template.Must(template.ParseFiles("templates/page.html"))
-		SubscriptionHandler().Notify(p)
-		posts = append(posts, p)
-		err := tmpl.Execute(w, posts)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-		}
-	})
+	router.HandleFunc("/socket", handleSocket)
+	router.PathPrefix("/static/").Handler(
+		http.StripPrefix("/static/", http.FileServer(http.Dir("static"))),
+	)
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		tmpl := template.Must(template.ParseFiles("templates/page.html"))
-		err := tmpl.Execute(w, posts)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-		}
-	})
-	http.ListenAndServe(":80", mux)
+	router.HandleFunc(
+		"/add",
+		func(w http.ResponseWriter, r *http.Request) {
+			p := post(r.FormValue("text"))
+			SubscriptionHandler().Post(p)
+			posts = append(posts, p)
+		},
+	).Methods("POST")
+	router.HandleFunc("/", renderer)
+
+	http.ListenAndServe(":80", router)
 }
 
 func writeMsg(ctx context.Context, msg post, c *websocket.Conn) error {
@@ -72,7 +71,7 @@ func handleSocket(w http.ResponseWriter, r *http.Request) {
 	SubscriptionHandler().Subscribe(sub)
 
 	defer func() {
-		fmt.Printf("unsub socket %s\n", sub.Key)
+		log.Printf("unsub socket %s", sub.Key)
 		SubscriptionHandler().Unsubscribe(sub.Key)
 	}()
 
@@ -87,5 +86,23 @@ func handleSocket(w http.ResponseWriter, r *http.Request) {
 		case <-ctx.Done():
 			return
 		}
+	}
+}
+
+func renderer(w http.ResponseWriter, r *http.Request) {
+	funcMap := template.FuncMap{
+		"revIndex": func(index, length int) (revIndex int) { return (length - 1) - index },
+	}
+
+	tmpl, err := template.New("page.html").Funcs(funcMap).ParseFiles("templates/page.html")
+	if err != nil {
+		log.Panic(err)
+	}
+
+	// better way to do this?
+	// https://gist.github.com/dmitshur/5f9e93c38f6b75421060
+	err = tmpl.Execute(w, posts)
+	if err != nil {
+		log.Panic(err)
 	}
 }

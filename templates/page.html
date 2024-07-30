@@ -1,18 +1,25 @@
 <!DOCTYPE html>
 <html>
-<script src="https://unpkg.com/htmx.org@2.0.1"></script>
-<script src="https://unpkg.com/htmx-ext-ws@2.0.0/ws.js"></script>
 
-<form hx-post="/add" hx-swap="none">
+<head>
+    <title>My cool website!!</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <script src="https://unpkg.com/htmx.org@2.0.1"></script>
+    <script src="https://unpkg.com/htmx-ext-ws@2.0.0/ws.js"></script>
+    <style src="/static/index.css"></style>
+</head>
+
+<form hx-post="/add" hx-swap="none" hx-on::after-request="this.reset()">
     <input type="text" name="text"></input>
 </form>
 <div hx-ext="ws" ws-connect="/socket">
     <ul>
         <div id="posts"></div>
-        {{range .}}
-        <li>{{.}}</li>
+        {{with $posts := .}}
+            {{range $i, $v := $posts}}
+                <li>{{index $posts (revIndex $i (len $posts))}</li>
+            {{end}}
         {{end}}
     </ul>
 </div>
-
 </html>

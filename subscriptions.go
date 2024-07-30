@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"sync"
 
 	"github.com/google/uuid"
@@ -58,7 +58,7 @@ func (handler *subscriptionHandler) Unsubscribe(sub subkey) {
 	handler.unsub <- sub
 }
 
-func (handler *subscriptionHandler) Notify(p post) {
+func (handler *subscriptionHandler) Post(p post) {
 	handler.notify <- p
 }
 
@@ -66,21 +66,20 @@ func (handler *subscriptionHandler) handleSubs() {
 	for {
 		select {
 		case ns := <-handler.sub:
-			fmt.Println("new sub")
+			log.Print("new sub")
 			handler.subs[ns.Key] = ns.Listener
 		case msg := <-handler.notify:
-			fmt.Println("new message, notifying")
+			log.Print("new message, notifying")
 			for key, sub := range handler.subs {
-				fmt.Printf("notifying %s", key)
+				log.Printf("notifying %s", key)
 				select {
 				case sub <- msg:
 				default:
-					fmt.Print("... no response")
+					log.Print("... no response")
 				}
-				fmt.Println()
 			}
 		case unsubKey := <-handler.unsub:
-			fmt.Printf("unsub: %s\n", unsubKey)
+			log.Printf("unsub: %s", unsubKey)
 			delete(handler.subs, unsubKey)
 		}
 	}
