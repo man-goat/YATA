@@ -15,7 +15,7 @@ eventually become Yet Another Todo-ish Application
 In order of priority
 
 - [x] i should be able to append text to the page and see it in real time on any tabs
-- [ ] i should be able to remove an item when I am done with it
+- [x] i should be able to remove an item when I am done with it
 - [ ] i should be able to use markdown.
 - [ ] i should be able to have multiple "topics"
-- [ ] multiple users can use the system without 
+- [ ] multiple users can use the system without any issues

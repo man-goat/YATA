@@ -44,6 +44,9 @@ func TestDB(t *testing.T) {
 		t.Fatal(err)
 	}
 	n, err := res.RowsAffected()
+	if err != nil {
+		t.Fatal(err)
+	}
 	if n != 0 {
 		t.Fatal("second delete should affect 0 rows")
 	}
