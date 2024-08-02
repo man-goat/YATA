@@ -1,6 +1,12 @@
 /* index.css */
 
 /* Global Styles */
+:root {
+    --text: #f0f0f0;
+    --bg: #111111;
+    --off: #222;
+}
+
 * {
     box-sizing: border-box;
 }
@@ -17,6 +23,8 @@
 }
 
 html, body {
+    color: var(--text);
+    background-color: var(--bg);
     font-family: Arial, sans-serif;
     line-height: 1.6;
     margin: 0 10%;
@@ -26,6 +34,8 @@ html, body {
 }
 
 #textarea {
+    color: var(--text);
+    background-color: var(--bg);
     width: 100%;
     border-radius: 5px;
 }
@@ -53,7 +63,7 @@ html, body {
 .post {
     margin: 5px;
     padding: 10px;
-    background-color: #fafafa;
+    background-color: var(--off);
 }
 
 .hide {
