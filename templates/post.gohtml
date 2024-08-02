@@ -1,12 +1,14 @@
 {{define "post"}}
-<li class="post">
-    <div class="post-content">
-        <pre class="post-text">{{.}}</pre>
-        <button class="post-delete" 
-            hx-delete="/posts"
-            hx-swap="outerHTML"
-            hx-target="closest li"
-        >X</button>
-    </div>
-</li>
+<div id="post-{{.Id}}">
+    <li class="post">
+        <div class="post-content">
+            <pre class="post-text">{{.Content}}</pre>
+            <button class="post-delete" 
+                hx-vals='{"id": "{{.Id}}"}'
+                hx-delete="/posts" 
+                hx-swap="outerHTML"
+                hx-target="closest li">X</button>
+        </div>
+    </li>
+</div>
 {{end}}

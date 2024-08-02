@@ -2,85 +2,71 @@ package main
 
 import (
 	"log"
-	"sync"
 
 	"github.com/google/uuid"
 )
 
-type subkey string
-type subscription struct {
-	Key      subkey
-	Listener chan post
+type SubKey string
+type Subscription struct {
+	Key      SubKey
+	Listener chan PostCrudEvent
 }
 
 type subscriptionHandler struct {
-	sub   chan subscription
-	unsub chan subkey
+	sub   chan Subscription
+	unsub chan SubKey
 
-	notify chan post
-	subs   map[subkey]chan post
+	notify chan PostCrudEvent
+	subs   map[SubKey]chan PostCrudEvent
 }
 
-var handler *subscriptionHandler = nil
-var handlerLock = &sync.Once{}
-
-func init() {
-	SubscriptionHandler()
+var handler = subscriptionHandler{
+	sub:    make(chan Subscription),
+	unsub:  make(chan SubKey),
+	notify: make(chan PostCrudEvent),
+	subs:   make(map[SubKey]chan PostCrudEvent),
 }
 
-func SubscriptionHandler() *subscriptionHandler {
-	if handler != nil {
-		return handler
-	}
-	handlerLock.Do(
-		func() {
-			handler = &subscriptionHandler{
-				sub:    make(chan subscription),
-				unsub:  make(chan subkey),
-				notify: make(chan post),
-				subs:   make(map[subkey]chan post),
-			}
-			go handler.handleSubs()
-		},
-	)
-	return handler
+func GenerateKey() SubKey {
+	return SubKey(uuid.New().String())
 }
 
-func (*subscriptionHandler) GenerateKey() subkey {
-	return subkey(uuid.New().String())
-}
-
-func (handler *subscriptionHandler) Subscribe(sub subscription) {
+func Subscribe(listener chan PostCrudEvent) SubKey {
+	sub := Subscription{Listener: listener, Key: GenerateKey()}
 	handler.sub <- sub
+	return sub.Key
 }
 
-func (handler *subscriptionHandler) Unsubscribe(sub subkey) {
+func Unsubscribe(sub SubKey) {
 	handler.unsub <- sub
 }
 
-func (handler *subscriptionHandler) Post(p post) {
-	handler.notify <- p
+func BroadcastEvent(event PostCrudEvent) {
+	log.Printf("broadcast: %s", event)
+	handler.notify <- event
 }
 
-func (handler *subscriptionHandler) handleSubs() {
-	for {
-		select {
-		case ns := <-handler.sub:
-			log.Print("new sub")
-			handler.subs[ns.Key] = ns.Listener
-		case msg := <-handler.notify:
-			log.Print("new message, notifying")
-			for key, sub := range handler.subs {
-				log.Printf("notifying %s", key)
-				select {
-				case sub <- msg:
-				default:
-					log.Print("... no response")
+func init() {
+	go func() {
+		for {
+			select {
+			case ns := <-handler.sub:
+				log.Print("new sub")
+				handler.subs[ns.Key] = ns.Listener
+			case msg := <-handler.notify:
+				log.Print("new message, notifying")
+				for key, sub := range handler.subs {
+					log.Printf("notifying %s", key)
+					select {
+					case sub <- msg:
+					default:
+						log.Print("... no response")
+					}
 				}
+			case unsubKey := <-handler.unsub:
+				log.Printf("unsub: %s", unsubKey)
+				delete(handler.subs, unsubKey)
 			}
-		case unsubKey := <-handler.unsub:
-			log.Printf("unsub: %s", unsubKey)
-			delete(handler.subs, unsubKey)
 		}
-	}
+	}()
 }

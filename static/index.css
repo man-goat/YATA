@@ -56,6 +56,10 @@ html, body {
     background-color: #fafafa;
 }
 
+.hide {
+    display: none;
+}
+
 .post-content {
     display: flex;
     justify-content: space-between;
