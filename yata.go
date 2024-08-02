@@ -23,15 +23,28 @@ func main() {
 			if len(text) == 0 {
 				return
 			}
-			p := CreatePost(text)
+			p, err := CreatePost(r.Context(), text)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				log.Print(err)
+			}
 
 			BroadcastEvent(PostCrudEvent{Payload: p, Type: CreateEvent})
 		},
 	).Methods("POST")
+
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		err := writeTemplate(w, Posts(), "page")
+		posts, err := GetPosts(r.Context())
 		if err != nil {
 			log.Print(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		err = writeTemplate(w, posts, "page")
+		if err != nil {
+			log.Print(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 	})
 
@@ -39,6 +52,13 @@ func main() {
 		"/posts",
 		func(w http.ResponseWriter, r *http.Request) {
 			postId := r.URL.Query().Get("id")
+
+			_, err := DeletePost(r.Context(), Post{Id: PostKey(postId)})
+			if err != nil {
+				log.Print(err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 
 			payload := PostCrudEvent{Type: DeleteEvent, Payload: Post{Id: PostKey(postId)}}
 			BroadcastEvent(payload)

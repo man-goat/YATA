@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"strings"
-	"sync"
 
 	"github.com/google/uuid"
+	_ "modernc.org/sqlite"
 )
 
 type PostKey string
@@ -27,21 +29,64 @@ type PostCrudEvent struct {
 	Payload Post
 }
 
-func CreatePost(content string) Post {
+var db *sql.DB
+
+func init() {
+	err := InitDB()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func InitDB() error {
+	var err error
+	// you can have a persistent store when you're old enough
+	db, err = sql.Open("sqlite", ":memory:")
+	if err != nil {
+		return err
+	}
+	_, err = db.ExecContext(context.Background(),
+		`create table messages (id uuid primary key, content text not null)`,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func CreatePost(ctx context.Context, content string) (Post, error) {
 	post := Post{Content: content, Id: PostKey(uuid.New().String())}
 
-	postMutex.Lock()
-	posts = append(posts, post)
-	postMutex.Unlock()
-	return post
+	_, err := db.ExecContext(ctx, "insert into messages (id, content) values (?, ?)", post.Id, post.Content)
+	if err != nil {
+		return Post{}, err
+	}
+
+	return post, nil
 }
 
-func Posts() []Post {
-	return posts
+func DeletePost(ctx context.Context, remove Post) (sql.Result, error) {
+	return db.ExecContext(ctx, "delete from messages where id = ?", remove.Id)
 }
 
-var postMutex = new(sync.Mutex)
-var posts = make([]Post, 0)
+func GetPosts(ctx context.Context) ([]Post, error) {
+	rows, err := db.Query(`select id, content from messages`)
+	if err != nil {
+		return nil, err
+	}
+	var out []Post
+
+	for rows.Next() {
+		var post Post
+		if err = rows.Scan(&post.Id, &post.Content); err != nil {
+			return nil, err
+		}
+		out = append(out, post)
+	}
+
+	return out, nil
+}
 
 func (p Post) String() string {
 	var b strings.Builder
