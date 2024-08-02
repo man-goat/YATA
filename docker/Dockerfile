@@ -4,7 +4,7 @@ WORKDIR /bloingo
 COPY go.mod go.sum ./
 RUN go mod download
 COPY *.go ./
-RUN CGO_ENABLED=0 GOARCH=arm64 go build -o /yata
+RUN CGO_ENABLED=0 go build -o /yata
 
 FROM scratch as final
 WORKDIR /
