@@ -42,7 +42,6 @@ func Unsubscribe(sub SubKey) {
 }
 
 func BroadcastEvent(event PostCrudEvent) {
-	log.Printf("broadcast: %s", event)
 	handler.notify <- event
 }
 
@@ -51,14 +50,14 @@ func init() {
 		for {
 			select {
 			case ns := <-handler.sub:
-				log.Print("new sub")
+				log.Printf("sub: %s", ns.Key)
 				handler.subs[ns.Key] = ns.Listener
-			case msg := <-handler.notify:
-				log.Print("new message, notifying")
+			case event := <-handler.notify:
+				log.Printf("broadcast: %s", event)
 				for key, sub := range handler.subs {
 					log.Printf("notifying %s", key)
 					select {
-					case sub <- msg:
+					case sub <- event:
 					default:
 						log.Print("... no response")
 					}

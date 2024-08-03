@@ -8,6 +8,7 @@ import (
 
 func writeTemplate(w io.Writer, data interface{}, templateFile string) error {
 	var rendered bytes.Buffer
+	// https://gist.github.com/dmitshur/5f9e93c38f6b75421060
 	funcMap := template.FuncMap{
 		"revIndex": func(index, length int) (revIndex int) { return (length - 1) - index },
 	}
