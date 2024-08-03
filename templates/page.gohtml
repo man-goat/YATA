@@ -9,26 +9,34 @@
     <script src="https://unpkg.com/htmx.org@2.0.1"></script>
     <script src="https://unpkg.com/htmx-ext-debug@2.0.0/debug.js"></script>
     <script src="https://unpkg.com/htmx-ext-ws@2.0.0/ws.js"></script>
+    <link rel="stylesheet" href="https://cdn.rawgit.com/CoffeePerry/simplemde-theme-bootstrap-dark/master/dist/simplemde-theme-bootstrap-dark.min.css">
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
     <link href="/static/index.css" rel="stylesheet" />
 </head>
 
 <body>
     <h1 id="header" class="title">YATA: Yet Another Todo-ish Application</h1>
-    <form id="form" hx-post="/posts" hx-swap="none" hx-on::after-request="this.reset()">
-        <textarea id="textarea" rows="3" name="text" form="form" hx-post="/posts" hx-swap="none"
-            minlength="1" required
-            hx-trigger="keydown[key==='Enter'&&!shiftKey]"></textarea>
-    </form>
-    <h1 class="post-header">Posts</h1>
-    <div id="post-area" hx-ext="ws" ws-connect="/socket">
-        <ul id="posts">
-            {{with $posts := .}}
-            {{range $i, $v := $posts}}
-            {{template "post" (index $posts (revIndex $i (len $posts)))}}
-            {{end}}
-            {{end}}
-        </ul>
+    <div class="main-container">
+        <form hx-vals='js:{ "text": simplemde.value() }' class="form" id="form" hx-post="/posts" hx-swap="none" hx-on::after-request="this.reset()">
+            <textarea class="input-box"></textarea>
+            <input type="submit" value="send"></input>
+        </form>
+        <div class="post-container">
+            <div id="post-area" class="post-area" hx-ext="ws" ws-connect="/socket">
+                <ul id="posts" class="posts">
+                    {{with $posts := .}}
+                    {{range $i, $v := $posts}}
+                    {{template "post" (index $posts (revIndex $i (len $posts)))}}
+                    {{end}}
+                    {{end}}
+                </ul>
+            </div>
+        </div>
     </div>
+    <script>
+        var simplemde = new SimpleMDE(
+        );
+    </script>
 </body>
 </html>
 {{end}}
